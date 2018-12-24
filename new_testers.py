@@ -3,6 +3,8 @@ import face_recognition
 import time
 import shutil
 
+import FN_functions as FN
+import dnn.face_detection_opencv_dnn as dnn
 from sqlalchemy.dialects.mssql import SMALLDATETIME
 
 from new_functions import *
@@ -12,12 +14,12 @@ import resize
 
 DEBUG = False
 DATA_SET_FOLDER_PATH = "/home/ophir/Desktop/dataSets/lfw"
-BIG_DS = "/media/ophir/SANDISK/general_ds"
-SMALL_DS = "F:\small_ds"
+BIG_DS = '/mnt/d/Prol/data/general_ds/'
+SMALL_DS = '/mnt/d/Prol/data/small_ds/'
 ALGORITHM = 'FR'
-RESOLUTIONS = [(800, 800)]
+RESOLUTIONS = [(1800, 1800)]
 num_images_load = 30
-save = True
+save = False
 
 
 def print_parameters(resolution, true_positive, true_negative, false_positive, false_negative,
@@ -230,8 +232,9 @@ def compare_person_to_himself_up_to_k(k, person_images, person_name, compared_hi
 
     checks_made = 0
 
-    profile_loc_faces = get_faces_loc(profile_image, ALGORITHM)
-    profile_faces = get_faces(profile_image, ALGORITHM, profile_loc_faces)
+    profile_faces = dnn.get_faces_from_image(profile_image)
+    # profile_loc_faces = get_faces_loc(profile_image, ALGORITHM)
+    # profile_faces = get_faces(profile_image, ALGORITHM, profile_loc_faces)
     add_profile = True
 
     avg_time = 0
@@ -243,10 +246,12 @@ def compare_person_to_himself_up_to_k(k, person_images, person_name, compared_hi
 
         start_time = time.time()
         check_image = resize.resize(check_image, resolution)
-        check_image_loc_faces = get_faces_loc(check_image, ALGORITHM)
-        check_image_faces = get_faces(check_image, ALGORITHM, check_image_loc_faces)
-        result,m,n = compare_images(profile_image, check_image, ALGORITHM, face_locs1=profile_loc_faces,
-                                face_locs2=check_image_loc_faces, faces1=profile_faces, faces2=check_image_faces)
+        # check_image_loc_faces = get_faces_loc(check_image, ALGORITHM)
+        # check_image_faces = get_faces(check_image, ALGORITHM, check_image_loc_faces)
+        check_image_faces = dnn.get_faces_from_image(check_image)
+        result,m,n = FN.compare_faces_FN(profile_faces, check_image_faces)
+        # result,m,n = compare_images(profile_image, check_image, ALGORITHM, face_locs1=profile_loc_faces,
+        #                         face_locs2=check_image_loc_faces, faces1=profile_faces, faces2=check_image_faces)
 
         checks_made += 1
 
@@ -313,13 +318,19 @@ def compare_different_profiles(profile1, profile1_name, profile2_name, profile2,
     start_time = time.time()
     resize.resize(profile2, resolution)
 
-    profile1_loc_faces = get_faces_loc(profile1, ALGORITHM)
-    profile1_faces = get_faces(profile1, ALGORITHM, profile1_loc_faces)
-    profile2_loc_faces = get_faces_loc(profile2, ALGORITHM)
-    profile2_faces = get_faces(profile2, ALGORITHM, profile2_loc_faces)
+    # profile1_loc_faces = get_faces_loc(profile1, ALGORITHM)
+    # profile1_faces = get_faces(profile1, ALGORITHM, profile1_loc_faces)
+    # profile2_loc_faces = get_faces_loc(profile2, ALGORITHM)
+    # profile2_faces = get_faces(profile2, ALGORITHM, profile2_loc_faces)
 
-    result,m,n = compare_images(profile1, profile2, ALGORITHM, face_locs1=profile1_loc_faces, face_locs2=profile2_loc_faces,
-                            faces1=profile1_faces, faces2=profile2_faces)
+    profile1_faces = dnn.get_faces_from_image(profile1)
+    profile2_faces = dnn.get_faces_from_image(profile2)
+
+    # result,m,n = compare_images(profile1, profile2, ALGORITHM, face_locs1=profile1_loc_faces, face_locs2=profile2_loc_faces,
+    #                         faces1=profile1_faces, faces2=profile2_faces)
+
+    result,m,n = FN.compare_faces_FN(profile1_faces, profile2_faces)
+
     time_it_took = time.time() - start_time
     debug_print("comparing time = " + str(time.time() - start_time))
 
@@ -460,7 +471,8 @@ def resolution_tester(main_dir_path, resolutions):
         avg_time_others = 0
         avg_time_himself = 0
 
-        num_files = len([dirs for subdir, dirs, files in os.walk(main_dir_path)])
+        dirs = [dirs for subdir, dirs, files in os.walk(main_dir_path)]
+        num_files = len(dirs)
 
         for start_index in range(0, num_files, num_images_load):
             print("start_index = ", start_index)
@@ -523,4 +535,4 @@ def delete_empty_dirs(main_dir_path):
 
 random.seed(100)
 # delete_empty_dirs(BIG_DS)
-resolution_tester(SMALL_DS, RESOLUTIONS)
+resolution_tester(BIG_DS, RESOLUTIONS)

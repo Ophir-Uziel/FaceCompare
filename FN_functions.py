@@ -28,7 +28,8 @@ sess = tf.Session()
 pnet, rnet, onet = detect_face.create_mtcnn(sess, 'facematch/align')
 
 # read 20170512-110547 model file downloaded from https://drive.google.com/file/d/0B5MzpY9kBtDVZ2RpVDYwWmxoSUk
-facenet.load_model("facematch/20170512-110547/20170512-110547.pb")
+#facenet.load_model("facematch/20170512-110547/20170512-110547.pb")
+facenet.load_model("facematch/20180408-102900/20180408-102900.pb")
 
 # Get input and output tensors
 images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
@@ -65,7 +66,7 @@ def get_faces(img):
     return faces
 
 
-def compare_images_FN(img1, img2, threshold=1.10, known_faces1=None, known_faces2=None):
+def compare_images_FN(img1, img2, threshold=1.0, known_faces1=None, known_faces2=None):
     if known_faces1 == None:
         image1_faces = get_faces(img1)
     else:
@@ -86,4 +87,57 @@ def compare_images_FN(img1, img2, threshold=1.10, known_faces1=None, known_faces
             dist = np.sqrt(np.sum(np.square(np.subtract(face1['embedding'], face2['embedding']))))
             if dist < threshold:
                 return SAME, i, j
+    return DIFFERENT, None, None
+
+# gets 2 face images and returns the distance between them
+def dis_of_2_faces_FN(face1, face2):
+    resized1 = cv2.resize(face1, (INPUT_IMAGE_SIZE, INPUT_IMAGE_SIZE), interpolation=cv2.INTER_CUBIC)
+    prewhitened1 = facenet.prewhiten(resized1)
+    resized2 = cv2.resize(face2, (INPUT_IMAGE_SIZE, INPUT_IMAGE_SIZE), interpolation=cv2.INTER_CUBIC)
+    prewhitened2 = facenet.prewhiten(resized2)
+    embedding1 = get_embedding(prewhitened1)
+    embedding2 = get_embedding(prewhitened2)
+    dist = np.sqrt(np.sum(np.square(np.subtract(embedding1, embedding2))))
+    return dist
+
+# get 2 faces lists, one for each image and returns the minimum distance between 2 faces
+def dis_of_many_faces_FN(faces1, faces2):
+
+    if len(faces1) == 0:
+        return None, None, None
+    elif len(faces2) == 0:
+        return None, None, None
+
+    enter = True
+    min_i = 0
+    min_j = 0
+
+    for i in range(len(faces1)):
+        for j in range(len(faces2)):
+            face1 = faces1[i]
+            face2 = faces2[j]
+            if face2.size == 0:
+                print("sss")
+            if enter:
+                enter = False
+                min_dist = dis_of_2_faces_FN(face1, face2)
+            else:
+                curr_dist = dis_of_2_faces_FN(face1, face2)
+                min_dist = min(min_dist, curr_dist)
+                min_i = i
+                min_j = j
+    return min_dist, min_i, min_j
+
+# gets 2 faces lists and threshold and returns whenever the minimum
+def compare_faces_FN(faces1, faces2, threshold=1.10):
+
+    if len(faces1) == 0:
+        return FIRST_IMAGE_NO_FACES, None, None
+    elif len(faces2) == 0:
+        return SECOND_IMAGE_NO_FACES, None, None
+
+    dist, min_i, min_j = dis_of_many_faces_FN(faces1, faces2)
+
+    if dist <= threshold:
+        return SAME, min_i, min_j
     return DIFFERENT, None, None
