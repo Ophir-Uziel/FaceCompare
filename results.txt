@@ -1,2 +1,2 @@
  RESOLUTION : (1800, 1800)
-	true_positive : 0.8425324675324676 | true_negative : 0.9395070948469006 | false_positive : 0.060492905153099324 | false_negative : 0.15746753246753248. Running Tme - on others: 0.4818066998147714| on himself : 0.7023746597140451
+	true_positive : 0.8133116883116883 | true_negative : 0.9808795411089866 | false_positive : 0.019120458891013385 | false_negative : 0.18668831168831168. Running Tme - on others: 0.5188416707913333| on himself : 0.8528750362871664

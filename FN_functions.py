@@ -29,8 +29,8 @@ pnet, rnet, onet = detect_face.create_mtcnn(sess, 'facematch/align')
 
 # read 20170512-110547 model file downloaded from https://drive.google.com/file/d/0B5MzpY9kBtDVZ2RpVDYwWmxoSUk
 #facenet.load_model("facematch/20170512-110547/20170512-110547.pb")
-facenet.load_model("facematch/20180408-102900/20180408-102900.pb")
-
+#facenet.load_model("facematch/20180408-102900/20180408-102900.pb")
+facenet.load_model("facematch/20180402-114759/20180402-114759.pb")
 # Get input and output tensors
 images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
 embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
@@ -129,7 +129,7 @@ def dis_of_many_faces_FN(faces1, faces2):
     return min_dist, min_i, min_j
 
 # gets 2 faces lists and threshold and returns whenever the minimum
-def compare_faces_FN(faces1, faces2, threshold=1.10):
+def compare_faces_FN(faces1, faces2, threshold=1.1):
 
     if len(faces1) == 0:
         return FIRST_IMAGE_NO_FACES, None, None
